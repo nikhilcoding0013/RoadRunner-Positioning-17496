@@ -63,6 +63,16 @@ public final class TwoDeadWheelLocalizer implements Localizer {
         this.pose = initialPose;
     }
 
+    // One-arg constructor
+    public TwoDeadWheelLocalizer(HardwareMap hardwareMap) {
+        this(
+            hardwareMap,
+            hardwareMap.get(IMU.class, "imu"),           // default imu
+            2 * Math.PI * 0.985 / 8192,                 // default inPerTick
+            new Pose2d(0, 0, 0)                          // default pose
+        );
+    }
+
     /* ===================== TUNING HELPERS ===================== */
 
     /** Call before each spin */
