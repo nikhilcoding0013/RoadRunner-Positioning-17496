@@ -14,7 +14,7 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
     public static double K = 0.075;
     public static int ITERATIONS = 8;
     public static int SPINS_PER_ITERATION = 3;
-    public static double SPIN_POWER = 0.275; // Spin motor power
+    public static double SPIN_POWER = 0.375; // Spin motor power
 
     // ===== INITIAL OFFSETS (from last run or rough guess) =====
     public static double forwardOffset = -5.8;
@@ -72,8 +72,8 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
                     lastHeading = heading;
 
                     // Spin motors (keep same direction as before)
-                    drive.leftFront.setPower(SPIN_POWER);
-                    drive.leftBack.setPower(SPIN_POWER);
+                    drive.leftFront.setPower(-SPIN_POWER);
+                    drive.leftBack.setPower(-SPIN_POWER);
                     drive.rightFront.setPower(SPIN_POWER);
                     drive.rightBack.setPower(SPIN_POWER);
 
