@@ -50,8 +50,8 @@ public final class TwoDeadWheelLocalizer implements Localizer {
         // TODO: make sure your config has **motors** with these names (or change them)
         //   the encoders should be plugged into the slot matching the named motor
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
-        par = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "rightBack")));
-        perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "rightFront")));
+        par = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "rightFront")));
+        perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "rightBack")));
 
         // TODO: reverse encoder directions if needed
         par.setDirection(DcMotorEx.Direction.REVERSE);
@@ -78,8 +78,8 @@ public final class TwoDeadWheelLocalizer implements Localizer {
     }
 
     public void setOffsets(double forwardInches, double lateralInches) {
-        PARAMS.parYTicks = forwardInches / inPerTick;
-        PARAMS.perpXTicks = lateralInches / inPerTick;
+        PARAMS.perpXTicks = forwardInches / inPerTick;
+        PARAMS.parYTicks = lateralInches / inPerTick;
     }
 
     @Override
