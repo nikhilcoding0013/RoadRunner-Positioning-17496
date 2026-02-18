@@ -34,7 +34,7 @@ public class TwoWheelOffsetTuner extends LinearOpMode {
             double heading = localizer.getPose().heading.toDouble();
 
             // Stop
-            if (heading < 0) {
+            if (heading > 1.502) {
                 break;
             }
 
