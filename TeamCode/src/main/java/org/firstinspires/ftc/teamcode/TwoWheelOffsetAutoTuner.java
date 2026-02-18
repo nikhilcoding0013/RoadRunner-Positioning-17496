@@ -7,16 +7,16 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Config
-@TeleOp(name = "TwoWheel Offset Auto Tuner")
+@TeleOp(name = "TwoWheel Offset Auto Tuner (Half Spin)")
 public class TwoWheelOffsetAutoTuner extends LinearOpMode {
 
-    // ===== TUNING PARAMETERS (dashboard editable) =====
+    // ===== TUNING PARAMETERS =====
     public static double K = 0.075;
     public static int ITERATIONS = 8;
     public static int SPINS_PER_ITERATION = 3;
-    public static double SPIN_POWER = 0.375; // Spin motor power
+    public static double SPIN_POWER = 0.375;
 
-    // ===== INITIAL OFFSETS (from last run or rough guess) =====
+    // ===== INITIAL OFFSETS =====
     public static double forwardOffset = -5.8;
     public static double lateralOffset = 2.4;
 
@@ -25,17 +25,16 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
 
-        // Initialize MecanumDrive with TwoDeadWheelLocalizer
+        // Initialize drive and localizer
         Pose2d startPose = new Pose2d(0, 0, 0);
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
-        // Apply starting offsets if localizer is TwoDeadWheel
         if (drive.localizer instanceof TwoDeadWheelLocalizer) {
             ((TwoDeadWheelLocalizer) drive.localizer).setOffsets(forwardOffset, lateralOffset);
         }
 
         telemetry.addLine("Two-Wheel Offset Auto Tuner Ready");
-        telemetry.addLine("Robot will spin automatically");
+        telemetry.addLine("Robot will spin automatically, half spin at a time");
         telemetry.update();
 
         waitForStart();
@@ -47,31 +46,23 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
 
             for (int spinNum = 0; spinNum < SPINS_PER_ITERATION && opModeIsActive(); spinNum++) {
 
-                // Stop robot before each spin
+                // Stop robot
                 drive.leftFront.setPower(0);
                 drive.leftBack.setPower(0);
                 drive.rightFront.setPower(0);
                 drive.rightBack.setPower(0);
                 sleep(200);
 
-                // Reset pose for isolated measurement
+                // Reset pose
                 drive.localizer.setPose(new Pose2d(0, 0, 0));
 
+                // Start half spin
+                double accumulatedHeading = 0.0;
                 double lastHeading = drive.localizer.getPose().heading.toDouble();
-                int halfSpins = 0; // count half rotations
 
-                // Spin until 1 full rotation (2 half spins)
-                while (opModeIsActive() && halfSpins < 2) {
+                while (opModeIsActive() && Math.abs(accumulatedHeading) < Math.PI) {
 
-                    double heading = drive.localizer.getPose().heading.toDouble();
-
-                    // Zero-crossing detection for half spin
-                    if (lastHeading < 0 && heading >= 0) halfSpins++;
-                    if (lastHeading > 0 && heading <= 0) halfSpins++;
-
-                    lastHeading = heading;
-
-                    // Spin motors (keep same direction as before)
+                    // Spin motors
                     drive.leftFront.setPower(-SPIN_POWER);
                     drive.leftBack.setPower(-SPIN_POWER);
                     drive.rightFront.setPower(SPIN_POWER);
@@ -79,13 +70,21 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
 
                     // Update pose
                     drive.updatePoseEstimate();
-
-                    // Telemetry updates during spin
                     Pose2d pose = drive.localizer.getPose();
+                    double heading = pose.heading.toDouble();
+
+                    // Handle wraparound
+                    double delta = heading - lastHeading;
+                    if (delta > Math.PI) delta -= 2 * Math.PI;
+                    if (delta < -Math.PI) delta += 2 * Math.PI;
+
+                    accumulatedHeading += delta;
+                    lastHeading = heading;
+
+                    // Telemetry
                     telemetry.addData("Iteration", iter + 1);
                     telemetry.addData("Spin", spinNum + 1);
-                    telemetry.addData("Half Spins", halfSpins);
-                    telemetry.addData("Heading (deg)", Math.toDegrees(pose.heading.toDouble()));
+                    telemetry.addData("Accum Heading (deg)", Math.toDegrees(accumulatedHeading));
                     telemetry.addData("ΔX (in)", pose.position.x);
                     telemetry.addData("ΔY (in)", pose.position.y);
                     telemetry.update();
@@ -93,28 +92,28 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
                     sleep(10);
                 }
 
-                // Stop robot after spin
+                // Stop robot after half spin
                 drive.leftFront.setPower(0);
                 drive.leftBack.setPower(0);
                 drive.rightFront.setPower(0);
                 drive.rightBack.setPower(0);
                 sleep(150);
 
-                // Measure drift from spin
+                // Record drift for this half-spin
                 Pose2d finalPose = drive.localizer.getPose();
                 sumDeltaX += finalPose.position.x;
                 sumDeltaY += finalPose.position.y;
             }
 
-            // Average drift over spins
+            // Average over half spins
             double avgDeltaX = sumDeltaX / SPINS_PER_ITERATION;
             double avgDeltaY = sumDeltaY / SPINS_PER_ITERATION;
 
-            // Update offsets
+            // Update offsets (still using K, can adjust later)
             forwardOffset -= K * avgDeltaY;
             lateralOffset -= K * avgDeltaX;
 
-            // Apply new offsets immediately
+            // Apply new offsets
             if (drive.localizer instanceof TwoDeadWheelLocalizer) {
                 ((TwoDeadWheelLocalizer) drive.localizer).setOffsets(forwardOffset, lateralOffset);
             }
@@ -134,9 +133,6 @@ public class TwoWheelOffsetAutoTuner extends LinearOpMode {
         telemetry.addData("FINAL lateralOffset", lateralOffset);
         telemetry.update();
 
-        // Keep alive for dashboard viewing
-        while (opModeIsActive()) {
-            sleep(50);
-        }
+        while (opModeIsActive()) sleep(50);
     }
 }
