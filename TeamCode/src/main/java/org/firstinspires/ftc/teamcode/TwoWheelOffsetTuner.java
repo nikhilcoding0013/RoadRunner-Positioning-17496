@@ -6,13 +6,15 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "TwoWheel Offset Tuner")
 public class TwoWheelOffsetTuner extends LinearOpMode {
-
+    public static double fwdIN = 0.0;
+    public static double latIN = 0.0;
+    
     @Override
     public void runOpMode() throws InterruptedException {
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
         TwoDeadWheelLocalizer localizer = (TwoDeadWheelLocalizer) drive.localizer;
-        localizer.setOffsets(-2.729, 1.504);
+        localizer.setOffsets(fwdIN, latIN);
         telemetry.addLine("Ready. Press Play to spin.");
         telemetry.update();
         waitForStart();
