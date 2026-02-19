@@ -55,13 +55,15 @@ public class TwoWheelOffsetTuner extends LinearOpMode {
         drive.updatePoseEstimate();
         Pose2d finalPose = localizer.getPose();
 
-        double lateralOffsetInches = 4* finalPose.position.x / (2 * Math.PI);
-        double forwardOffsetInches = 4* finalPose.position.y / (2 * Math.PI);
+        //double lateralOffsetInches = 4* finalPose.position.x / (2 * Math.PI);
+        //double forwardOffsetInches = 4* finalPose.position.y / (2 * Math.PI);
 
         while (opModeIsActive()) {
             telemetry.addLine("=== TUNING COMPLETE ===");
-            telemetry.addData("lateralOffset (parYTicks * inPerTick)", lateralOffsetInches);
-            telemetry.addData("forwardOffset (perpXTicks * inPerTick)", forwardOffsetInches);
+            telemtery.addLine("finalX", finalPose.position.x);
+            telemtery.addLine("finalY", finalPose.position.y);
+            //telemetry.addData("lateralOffset", lateralOffsetInches);
+            //telemetry.addData("forwardOffset", forwardOffsetInches);
             telemetry.update();
         }
     }
